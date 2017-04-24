@@ -1,0 +1,62 @@
+version: '2'
+networks:
+  app-tier:
+    driver: bridge
+services:
+  db:
+    image: postgres
+    networks:
+      - app-tier
+  elasticsearch:
+    image: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - app-tier
+    environment:
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "network.host="
+      - "transport.host=127.0.0.1"
+      - "http.host=0.0.0.0"
+      - "xpack.security.enabled=false"
+    volumes:
+      - elasticsearch:/usr/share/elasticsearch/data
+
+  rabbitmq:
+    image: 'bitnami/rabbitmq:latest'
+    ports:
+      - "5672:5672"
+      - '15672:15672'
+    volumes:
+      - 'rabbitmq_data:/bitnami/rabbitmq'
+    networks:
+      - app-tier
+    environment: 
+      - "RABBITMQ_DEFAULT_PASS: pass"
+      - "RABBITMQ_DEFAULT_USER: user"
+      - "RABBITMQ_DEFAULT_VHOST: vhost"
+  web:
+    build: .
+    command: bundle exec rails s -p 3000 -b '0.0.0.0'
+    volumes:
+      - .:/instabug3
+
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - elasticsearch
+    links:
+      - db
+      - elasticsearch
+    environment:
+      - DOCKERIZED=true
+
+    networks:
+      - app-tier
+
+volumes:
+  elasticsearch: {}
+  rabbitmq_data:
+    driver: local
