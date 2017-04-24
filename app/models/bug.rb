@@ -12,15 +12,12 @@ class Bug < ApplicationRecord
   after_create :init
 
   def init
-    puts "d5al init"
     related_bugs=Bug.where(:application_token => self.application_token).where.not(:id => self.id)
     if related_bugs.any?
       x=related_bugs.map(&:number).max
       self.number=x +1
-      puts "awel case"
     else
       self.number=1
-      puts "2nd case"
     end
     self.save!
   end
@@ -42,11 +39,8 @@ class Bug < ApplicationRecord
   def self.post(q)
     
     q.subscribe do |delivery_info, metadata, payload|
-      puts "YAMOSAHEL"
-      puts "opaaaa"
       puts "Received #{payload}"
       attributes=eval(payload)
-      puts attributes
       s=State.create(:device => attributes[:device], :os=> attributes[:os], :memory => attributes[:memory], :storage => [:storage])
       b=Bug.create(:application_token => attributes[:application_token], :state_id =>s.id, :priority => attributes[:priority],
         :number =>attributes[:number],:status => attributes[:status], :comment => attributes[:comment])
