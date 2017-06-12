@@ -16,7 +16,7 @@ class Api::V1::BugsController < ApplicationController
 		x.publish(input, :routing_key => q.name) 
 		sleep 1.0
 		conn.close
-		render :json => {message: "Bug has been saved correctly"}, status: 200
+		render :json => {message: "Bug has been saved correctly"}, status: 201
 	end
 
 	def show	
